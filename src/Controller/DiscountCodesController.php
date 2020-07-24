@@ -25,20 +25,24 @@ class DiscountCodesController extends AbstractController {
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            $formData = $form->getData();
-            $numberOfCodes = $formData['numberOfCodes'];
-            $lengthOfCode = $formData['lengthOfCode'];
+            try {
+                $formData = $form->getData();
+                $numberOfCodes = $formData['numberOfCodes'];
+                $lengthOfCode = $formData['lengthOfCode'];
 
-            $discountCodes = $discountCodesService->generateDiscountCodes($numberOfCodes, $lengthOfCode);
-            $fileContent = $discountCodeSerializer->serializeObjects($discountCodes);
+                $discountCodes = $discountCodesService->generateDiscountCodes($numberOfCodes, $lengthOfCode);
+                $fileContent = $discountCodeSerializer->serializeObjects($discountCodes);
 
-            $response = new Response($fileContent);
-            $disposition = HeaderUtils::makeDisposition(
-                HeaderUtils::DISPOSITION_ATTACHMENT,
-                $formData['fileName']
-            );
-            $response->headers->set('Content-Disposition', $disposition);
-            return $response;
+                $response = new Response($fileContent);
+                $disposition = HeaderUtils::makeDisposition(
+                    HeaderUtils::DISPOSITION_ATTACHMENT,
+                    $formData['fileName']
+                );
+                $response->headers->set('Content-Disposition', $disposition);
+                return $response;
+            } catch (\InvalidArgumentException $e) {
+                return $this->json(['error' => $e->getMessage()]);
+            }
         }
 
         return $this->render('discount_codes/generate.html.twig', [
